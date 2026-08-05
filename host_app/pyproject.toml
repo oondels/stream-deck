@@ -1,0 +1,21 @@
+[build-system]
+requires = ["setuptools>=75"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "streamdeck-monitor"
+version = "0.1.0"
+description = "Monitor serial do Stream Deck Mini"
+requires-python = ">=3.11"
+dependencies = ["pyserial==3.5"]
+
+[project.scripts]
+streamdeck-monitor = "streamdeck_monitor.bootstrap:main"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["streamdeck_monitor*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q"

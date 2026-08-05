@@ -1,0 +1,14 @@
+{
+  "serial": {
+    "port": "auto",
+    "baud_rate": 115200,
+    "scan_interval_seconds": 2.0,
+    "handshake_timeout_seconds": 2.5
+  },
+  "logging": {
+    "level": "INFO",
+    "file": "host_app/logs/events.jsonl",
+    "max_bytes": 1048576,
+    "backup_count": 5
+  }
+}

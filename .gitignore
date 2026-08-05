@@ -1,0 +1,7 @@
+.pio/
+.venv/
+__pycache__/
+.pytest_cache/
+*.py[cod]
+*.egg-info/
+host_app/logs/

@@ -33,8 +33,18 @@ recolocar o cabo não exige reiniciar o monitor.
 
 ## Evolução prevista
 
-1. Validar o hardware e a telemetria serial.
+1. Validar o hardware e a telemetria serial. **Concluído.**
 2. Adicionar bindings seguros e ações Windows como casos de uso do host.
+   **Implementado nesta etapa.**
 3. Adicionar configuração visual e perfis.
 4. Adicionar feedback luminoso por adaptador de saída.
 5. Portar a infraestrutura do firmware para Raspberry Pi Pico e avaliar HID USB.
+
+## Resultado da etapa 2
+
+- Bindings são validados e carregados de JSON na inicialização.
+- Eventos podem controlar mídia/volume, hotkeys, aplicativos e URLs no Windows.
+- Ações usam fila dedicada e não bloqueiam a leitura serial.
+- Linux oferece dry-run explícito para validar a integração sem efeitos externos.
+- Shell arbitrário, macros, gestos adicionais, GUI e perfis continuam fora do
+  escopo.

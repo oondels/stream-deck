@@ -1,5 +1,7 @@
 from dataclasses import dataclass
 
+from streamdeck_monitor.domain.actions import Binding
+
 
 @dataclass(frozen=True, slots=True)
 class SerialSettings:
@@ -18,6 +20,13 @@ class LoggingSettings:
 
 
 @dataclass(frozen=True, slots=True)
+class ActionsSettings:
+    bindings: tuple[Binding, ...] = ()
+    queue_size: int = 64
+
+
+@dataclass(frozen=True, slots=True)
 class AppSettings:
     serial: SerialSettings = SerialSettings()
     logging: LoggingSettings = LoggingSettings()
+    actions: ActionsSettings = ActionsSettings()

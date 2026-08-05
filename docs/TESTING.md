@@ -29,6 +29,10 @@ Arduino ficam restritos à integração no alvo.
 - Retorna à descoberta depois de erro de leitura.
 - Emite o mesmo evento para console e arquivo estruturado.
 - Rotaciona o arquivo nos limites configurados.
+- Valida bindings e rejeita ações inseguras ou incompatíveis.
+- Resolve eventos e mantém ações em fila FIFO sem bloquear a serial.
+- Simula `SendInput`, abertura de processos e URLs sem depender de Windows.
+- Suprime ações para sequências duplicadas ou regressivas.
 
 ## Validação manual
 
@@ -40,10 +44,28 @@ Arduino ficam restritos à integração no alvo.
 6. Comparar console e JSONL.
 7. Deixar eventos suficientes para provocar rotação em configuração de teste.
 
+## Validação manual das ações
+
+### Linux
+
+1. Fechar o monitor serial do PlatformIO.
+2. Iniciar o app com `--dry-run-actions`.
+3. Acionar todos os controles e confirmar `input` seguido de `action_dry_run`.
+4. Confirmar que eventos `release` sem binding não geram ação.
+
+### Windows
+
+1. Confirmar faixa anterior, play/pause, próxima faixa e parar nas teclas 1–4.
+2. Confirmar `Win+D`, Calculadora e YouTube nas teclas 5–7.
+3. Confirmar volume e mudo pelo encoder, uma ação por evento.
+4. Remover e recolocar a USB e repetir uma ação sem reiniciar o host.
+5. Provocar uma ação inválida e confirmar que eventos posteriores continuam.
+
 ## Gate de conclusão
 
 - Documentação internamente consistente.
 - `pio run` e `pio test -e native` aprovados.
 - `pytest` aprovado.
-- Validação manual documentada; se não houver hardware disponível, marcar
-  explicitamente como pendente, sem declarar o MVP fisicamente validado.
+- Dry-run físico no Linux aprovado.
+- Validação real das APIs de ação no Windows documentada; se não houver Windows
+  disponível, marcar explicitamente como pendente.

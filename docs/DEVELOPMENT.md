@@ -49,6 +49,21 @@ Para fixar uma porta:
 python -m streamdeck_monitor --config host_app\config.example.json --port COM4
 ```
 
+O exemplo configura mídia nas teclas 1 a 4, `Win+D`, Calculadora, YouTube e
+volume/mudo no encoder. Edite `actions.bindings` para alterar o mapa.
+
+No Linux, valide todo o fluxo sem executar ações Windows:
+
+```bash
+host_app/.venv/bin/python -m streamdeck_monitor \
+  --config host_app/config.example.json \
+  --port /dev/ttyUSB0 \
+  --dry-run-actions
+```
+
+Com bindings configurados, executar fora do Windows sem `--dry-run-actions`
+termina com erro de configuração operacional.
+
 O diretório `host_app` será incluído no caminho pelo comando de desenvolvimento
 documentado no próprio pacote. O monitor cria o diretório de log quando necessário.
 
@@ -63,6 +78,15 @@ O JSON de configuração contém:
 - `logging.file`: caminho do JSONL.
 - `logging.max_bytes`: tamanho de cada arquivo.
 - `logging.backup_count`: quantidade de backups.
+- `actions.queue_size`: limite da fila FIFO, padrão 64.
+- `actions.bindings`: relação entre `control`/`event` e uma ação.
+
+Tipos de ação:
+
+- `media`: reprodução, faixa, volume e mudo.
+- `hotkey`: combinação de teclas normalizadas em minúsculas.
+- `launch`: executável e argumentos, sem interpretação por shell.
+- `open_url`: URL HTTP ou HTTPS.
 
 Argumentos da CLI prevalecem sobre o arquivo.
 
@@ -74,3 +98,8 @@ Argumentos da CLI prevalecem sobre o arquivo.
 - Eventos repetidos: confira GND, montagem e teste de debounce.
 - Encoder invertido: troque A/B no perfil de placa.
 - Log indisponível: o console deve continuar e informar a falha.
+- `action_failed`: a ação falhou, mas a leitura serial continua.
+- `action_suppressed`: evento regressivo não executado para evitar duplicação.
+- `action_dropped`: fila cheia ou encerramento com ações pendentes.
+- Não abra `pio device monitor` junto com o app. No POSIX, o app solicita
+  exclusividade da TTY; apenas um consumidor deve usar a serial.

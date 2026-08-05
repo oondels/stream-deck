@@ -10,5 +10,70 @@
     "file": "host_app/logs/events.jsonl",
     "max_bytes": 1048576,
     "backup_count": 5
+  },
+  "actions": {
+    "queue_size": 64,
+    "bindings": [
+      {
+        "id": "previous-track",
+        "control": "key_1",
+        "event": "press",
+        "action": {"type": "media", "command": "previous_track"}
+      },
+      {
+        "id": "play-pause",
+        "control": "key_2",
+        "event": "press",
+        "action": {"type": "media", "command": "play_pause"}
+      },
+      {
+        "id": "next-track",
+        "control": "key_3",
+        "event": "press",
+        "action": {"type": "media", "command": "next_track"}
+      },
+      {
+        "id": "stop",
+        "control": "key_4",
+        "event": "press",
+        "action": {"type": "media", "command": "stop"}
+      },
+      {
+        "id": "show-desktop",
+        "control": "key_5",
+        "event": "press",
+        "action": {"type": "hotkey", "keys": ["win", "d"]}
+      },
+      {
+        "id": "calculator",
+        "control": "key_6",
+        "event": "press",
+        "action": {"type": "launch", "executable": "calc.exe"}
+      },
+      {
+        "id": "youtube",
+        "control": "key_7",
+        "event": "press",
+        "action": {"type": "open_url", "url": "https://www.youtube.com"}
+      },
+      {
+        "id": "volume-down",
+        "control": "encoder_ccw",
+        "event": "rotate",
+        "action": {"type": "media", "command": "volume_down"}
+      },
+      {
+        "id": "volume-up",
+        "control": "encoder_cw",
+        "event": "rotate",
+        "action": {"type": "media", "command": "volume_up"}
+      },
+      {
+        "id": "volume-mute",
+        "control": "encoder_press",
+        "event": "press",
+        "action": {"type": "media", "command": "volume_mute"}
+      }
+    ]
   }
 }

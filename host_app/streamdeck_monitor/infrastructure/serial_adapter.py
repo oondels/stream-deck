@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import os
 from typing import Sequence
 
 import serial
@@ -12,11 +13,15 @@ class PySerialConnection(LineConnection):
     def __init__(self, port: str, baud_rate: int) -> None:
         self._port = port
         try:
+            options: dict[str, object] = {}
+            if os.name == "posix":
+                options["exclusive"] = True
             self._serial = serial.Serial(
                 port=port,
                 baudrate=baud_rate,
                 timeout=0.2,
                 write_timeout=0.5,
+                **options,
             )
         except serial.SerialException as error:
             raise ConnectionError(str(error)) from error

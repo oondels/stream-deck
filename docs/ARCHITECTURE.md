@@ -10,6 +10,12 @@
                                                           |       |
                                                           v       v
                                                       [console] [JSONL]
+                                                          |
+                                                          v
+                                                    [bindings + fila]
+                                                          |
+                                                          v
+                                                    [ações Windows]
 ```
 
 O handshake, e não VID/PID ou nome de porta, identifica o deck. Isso evita
@@ -43,10 +49,11 @@ adaptador serial e não no evento de domínio.
 ### Monitor Windows
 
 - **Domínio:** mensagens aceitas, validação e erros de protocolo.
-- **Aplicação:** descoberta, conexão, acompanhamento de sequência e emissão de
-  registros.
-- **Portas:** fonte serial, relógio e destino de registros.
-- **Infraestrutura:** pyserial, console e arquivo rotativo.
+- **Aplicação:** descoberta, conexão, sequência, resolução de bindings e emissão
+  de registros.
+- **Portas:** fonte serial, relógio, destino de registros, dispatcher e executor
+  de ações.
+- **Infraestrutura:** pyserial, console, arquivo rotativo, fila e APIs Windows.
 - **Bootstrap:** CLI, configuração e composição.
 
 ## Fluxos principais
@@ -67,6 +74,8 @@ adaptador serial e não no evento de domínio.
 3. A aplicação cria um evento e incrementa `seq`.
 4. O adaptador serial converte o evento em uma linha JSON.
 5. O host valida a linha, verifica a sequência e envia o registro aos dois sinks.
+6. Um binding correspondente é enfileirado sem bloquear a leitura.
+7. O worker executa a ação e registra sucesso ou falha.
 
 ## Falhas e recuperação
 
@@ -76,10 +85,12 @@ adaptador serial e não no evento de domínio.
 - Falha no arquivo: manter console ativo e informar o erro.
 - Reinício do firmware: um novo `hello` e/ou redução de `seq` inicia nova sessão.
 - Fila/buffer saturado: nunca bloquear indefinidamente o loop de controles.
+- Ação externa falha: registrar e continuar processando a serial.
+- Sequência duplicada ou regressiva: registrar e suprimir a ação correspondente.
 
 ## Limites arquiteturais
 
 - Nenhum include Arduino em domínio ou aplicação.
 - Nenhum import de `serial`, `logging` ou `pathlib` no domínio Python.
-- O aplicativo não interpreta um evento como uma ação Windows neste MVP.
+- A aplicação conhece intenções de ação, mas não APIs concretas do Windows.
 - Suporte futuro ao Pico será outro adaptador/perfil, não condicionais espalhadas.

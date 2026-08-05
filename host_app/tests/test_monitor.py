@@ -5,6 +5,7 @@ from streamdeck_monitor.application.monitor import DeckMonitor
 from streamdeck_monitor.application.ports import ConnectionError
 from streamdeck_monitor.application.settings import SerialSettings
 from streamdeck_monitor.infrastructure.protocol import JsonProtocolCodec
+from streamdeck_monitor.domain.actions import Binding, MediaAction
 
 
 class FakeClock:
@@ -74,6 +75,18 @@ class FakeSink:
         )
 
 
+class FakeDispatcher:
+    def __init__(self):
+        self.bindings = []
+        self.closed = False
+
+    def submit(self, binding):
+        self.bindings.append(binding)
+
+    def close(self):
+        self.closed = True
+
+
 def make_monitor(provider: FakeProvider, sink: FakeSink, clock=None) -> DeckMonitor:
     return DeckMonitor(
         settings=SerialSettings(handshake_timeout_seconds=0.1),
@@ -94,9 +107,7 @@ def test_discovers_only_connection_with_valid_handshake() -> None:
         ],
     )
     sink = FakeSink()
-    monitor = make_monitor(
-        FakeProvider({"COM1": rejected, "COM2": accepted}), sink
-    )
+    monitor = make_monitor(FakeProvider({"COM1": rejected, "COM2": accepted}), sink)
 
     result = monitor.discover_once()
 
@@ -108,16 +119,13 @@ def test_discovers_only_connection_with_valid_handshake() -> None:
 
 def test_skips_port_that_cannot_be_opened() -> None:
     sink = FakeSink()
-    monitor = make_monitor(
-        FakeProvider({"COM1": ConnectionError("busy")}), sink
-    )
+    monitor = make_monitor(FakeProvider({"COM1": ConnectionError("busy")}), sink)
     assert monitor.discover_once() is None
 
 
 def test_logs_input_and_sequence_gap() -> None:
     sink = FakeSink()
     monitor = make_monitor(FakeProvider({}), sink)
-    codec = JsonProtocolCodec()
     first = (
         '{"v":1,"type":"input","control":"key_1","event":"press",'
         '"seq":1,"uptime_ms":100}'
@@ -143,3 +151,53 @@ def test_invalid_line_is_logged_and_ignored() -> None:
     monitor = make_monitor(FakeProvider({}), sink)
     monitor.process_line("not-json", "COM4")
     assert sink.entries[0]["event"] == "invalid_message"
+
+
+def test_dispatches_binding_but_suppresses_regressive_sequence() -> None:
+    sink = FakeSink()
+    dispatcher = FakeDispatcher()
+    binding = Binding("play", "key_1", "press", MediaAction("play_pause"))
+    monitor = DeckMonitor(
+        settings=SerialSettings(),
+        provider=FakeProvider({}),
+        codec=JsonProtocolCodec(),
+        clock=FakeClock(),
+        sink=sink,
+        bindings=(binding,),
+        dispatcher=dispatcher,
+    )
+    first = '{"v":1,"type":"input","control":"key_1","event":"press","seq":2,"uptime_ms":100}'
+    regressive = '{"v":1,"type":"input","control":"key_1","event":"press","seq":1,"uptime_ms":120}'
+
+    monitor.process_line(first, "COM4")
+    monitor.process_line(regressive, "COM4")
+
+    assert dispatcher.bindings == [binding]
+    assert any(entry["event"] == "action_suppressed" for entry in sink.entries)
+
+
+def test_sequence_gap_still_dispatches_received_event() -> None:
+    sink = FakeSink()
+    dispatcher = FakeDispatcher()
+    binding = Binding("play", "key_1", "press", MediaAction("play_pause"))
+    monitor = DeckMonitor(
+        settings=SerialSettings(),
+        provider=FakeProvider({}),
+        codec=JsonProtocolCodec(),
+        clock=FakeClock(),
+        sink=sink,
+        bindings=(binding,),
+        dispatcher=dispatcher,
+    )
+
+    monitor.process_line(
+        '{"v":1,"type":"input","control":"key_1","event":"press","seq":1,"uptime_ms":100}',
+        "COM4",
+    )
+    monitor.process_line(
+        '{"v":1,"type":"input","control":"key_1","event":"press","seq":3,"uptime_ms":120}',
+        "COM4",
+    )
+
+    assert dispatcher.bindings == [binding, binding]
+    assert any(entry["event"] == "sequence_gap" for entry in sink.entries)

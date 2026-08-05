@@ -4,6 +4,7 @@ from datetime import datetime
 from typing import Mapping, Protocol, Sequence
 
 from streamdeck_monitor.domain.messages import DeviceMessage
+from streamdeck_monitor.domain.actions import Action, Binding
 
 
 class ConnectionError(RuntimeError):
@@ -49,3 +50,16 @@ class LogSink(Protocol):
         timestamp: datetime,
         details: Mapping[str, object],
     ) -> None: ...
+
+
+class ActionExecutor(Protocol):
+    @property
+    def success_event(self) -> str: ...
+
+    def execute(self, action: Action) -> None: ...
+
+
+class ActionDispatcher(Protocol):
+    def submit(self, binding: Binding) -> None: ...
+
+    def close(self) -> None: ...

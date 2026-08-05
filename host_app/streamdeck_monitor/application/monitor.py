@@ -3,6 +3,7 @@ from __future__ import annotations
 from dataclasses import asdict
 
 from streamdeck_monitor.application.ports import (
+    ActionDispatcher,
     ConnectionError,
     LineConnection,
     LogSink,
@@ -10,8 +11,10 @@ from streamdeck_monitor.application.ports import (
     RuntimeClock,
     SerialProvider,
 )
+from streamdeck_monitor.application.bindings import BindingResolver
 from streamdeck_monitor.application.settings import SerialSettings
-from streamdeck_monitor.domain.messages import DeviceHello, InputEvent, ProtocolError
+from streamdeck_monitor.domain.actions import Binding
+from streamdeck_monitor.domain.messages import DeviceHello, ProtocolError
 
 
 class SequenceTracker:
@@ -43,6 +46,8 @@ class DeckMonitor:
         codec: ProtocolCodec,
         clock: RuntimeClock,
         sink: LogSink,
+        bindings: tuple[Binding, ...] = (),
+        dispatcher: ActionDispatcher | None = None,
     ) -> None:
         self._settings = settings
         self._provider = provider
@@ -50,6 +55,12 @@ class DeckMonitor:
         self._clock = clock
         self._sink = sink
         self._sequences = SequenceTracker()
+        self._bindings = BindingResolver(bindings)
+        self._dispatcher = dispatcher
+
+    def close(self) -> None:
+        if self._dispatcher is not None:
+            self._dispatcher.close()
 
     def run_forever(self) -> None:
         self._log("INFO", "monitor_started", port=self._settings.port or "auto")
@@ -143,10 +154,37 @@ class DeckMonitor:
             return
 
         sequence_issue = self._sequences.observe(message.sequence)
+        suppress_action = False
         if sequence_issue is not None:
             event_name, details = sequence_issue
             self._log("WARNING", event_name, port=port, **details)
+            suppress_action = event_name == "sequence_reset"
         self._log("INFO", "input", port=port, **asdict(message))
+
+        if self._dispatcher is None:
+            return
+        binding = self._bindings.resolve(message.control, message.event)
+        if binding is None:
+            self._log(
+                "DEBUG",
+                "binding_not_found",
+                port=port,
+                control=message.control,
+                input_event=message.event,
+            )
+            return
+        if suppress_action:
+            self._log(
+                "WARNING",
+                "action_suppressed",
+                port=port,
+                binding_id=binding.id,
+                control=message.control,
+                input_event=message.event,
+                reason="non_monotonic_sequence",
+            )
+            return
+        self._dispatcher.submit(binding)
 
     def _log(self, level: str, record_type: str, **details: object) -> None:
         self._sink.emit(level, record_type, self._clock.now(), details)

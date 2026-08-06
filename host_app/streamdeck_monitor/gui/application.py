@@ -1,8 +1,9 @@
 from __future__ import annotations
 
 import sys
+from pathlib import Path
 
-from PySide6.QtGui import QAction
+from PySide6.QtGui import QAction, QIcon
 from PySide6.QtWidgets import (
     QApplication,
     QMenu,
@@ -23,6 +24,9 @@ def run(minimized: bool = False) -> int:
     application = QApplication.instance() or QApplication(sys.argv)
     application.setApplicationName("Stream Deck Mini")
     application.setOrganizationName("StreamDeckMini")
+    application.setWindowIcon(
+        QIcon(str(Path(__file__).with_name("assets") / "app_icon.svg"))
+    )
     application.setStyleSheet(DARK_STYLESHEET)
     instance = SingleInstance()
     if not instance.acquire():
@@ -81,7 +85,9 @@ def _create_tray(
     if not QSystemTrayIcon.isSystemTrayAvailable():
         return None
     application.setQuitOnLastWindowClosed(False)
-    icon = application.style().standardIcon(QStyle.StandardPixmap.SP_ComputerIcon)
+    icon = application.windowIcon()
+    if icon.isNull():
+        icon = application.style().standardIcon(QStyle.StandardPixmap.SP_ComputerIcon)
     tray = QSystemTrayIcon(icon, window)
     tray.setToolTip("Stream Deck Mini")
     menu = QMenu()

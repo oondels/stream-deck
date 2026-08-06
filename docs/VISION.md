@@ -23,20 +23,19 @@ recolocar o cabo não exige reiniciar o monitor.
 - Domínio e aplicação podem ser testados sem placa ou porta COM.
 - A montagem e a operação podem ser reproduzidas somente com a documentação.
 
-## Fora do escopo
+## Fora do escopo atual
 
-- Execução de atalhos, mídia, programas, URLs ou comandos.
-- HID USB, GUI, instalador ou executável empacotado.
+- HID USB, macros, shell arbitrário e instalador.
 - Wi-Fi, Bluetooth, atualização remota e persistência no microcontrolador.
 - LEDs externos. O GPIO futuro fica apenas reservado e documentado.
-- Perfis, macros, clique longo, duplo clique e aceleração do encoder.
+- Clique longo, duplo clique e aceleração do encoder.
 
 ## Evolução prevista
 
 1. Validar o hardware e a telemetria serial. **Concluído.**
 2. Adicionar bindings seguros e ações Windows como casos de uso do host.
    **Implementado nesta etapa.**
-3. Adicionar configuração visual e perfis.
+3. Adicionar configuração visual e perfis. **Implementado.**
 4. Adicionar feedback luminoso por adaptador de saída.
 5. Portar a infraestrutura do firmware para Raspberry Pi Pico e avaliar HID USB.
 
@@ -46,5 +45,12 @@ recolocar o cabo não exige reiniciar o monitor.
 - Eventos podem controlar mídia/volume, hotkeys, aplicativos e URLs no Windows.
 - Ações usam fila dedicada e não bloqueiam a leitura serial.
 - Linux oferece dry-run explícito para validar a integração sem efeitos externos.
-- Shell arbitrário, macros, gestos adicionais, GUI e perfis continuam fora do
-  escopo.
+- Shell arbitrário, macros e gestos adicionais continuam fora do escopo.
+
+## Resultado da etapa 3
+
+- A GUI PySide6 administra controles, ações e perfis em português.
+- Mudanças são persistidas atomicamente e aplicadas sem reconectar o deck.
+- Status, eventos recentes, bandeja, pausa, autostart e instância única integram
+  a operação Windows.
+- A distribuição é gerada com PyInstaller em formato `onedir`, sem instalador.

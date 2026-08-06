@@ -43,11 +43,12 @@ como concluída depois que seus testes associados passarem.
   - [x] instância única
   - [x] autostart opcional por HKCU
 - [ ] 6. Distribuição e aceite
-  - [ ] assets e ícone do aplicativo
-  - [ ] PyInstaller `onedir` sem console
-  - [ ] testes Qt com `pytest-qt`
-  - [ ] build/testes existentes sem regressão
-  - [ ] documentação de uso e checklist manual Windows
+  - [x] assets e ícone do aplicativo
+  - [x] PyInstaller `onedir` sem console
+  - [x] testes Qt com `pytest-qt`
+  - [x] build/testes existentes sem regressão
+  - [x] documentação de uso e checklist manual Windows criado
+  - [ ] checklist de aceite executado no Windows 10/11 com hardware
 
 ## Decisões fixadas
 
@@ -68,5 +69,6 @@ como concluída depois que seus testes associados passarem.
 
 ## Última validação
 
-- 2026-08-06: etapas 1 a 5 concluídas; `71 passed` no host e `ruff check`
-  aprovado.
+- 2026-08-06: etapas 1 a 5 concluídas; etapa 6 automatizada aprovada com
+  `71 passed`, `ruff check`, PyInstaller, 6 testes nativos e builds `esp32dev` e
+  `esp32c3`. Aceite manual no Windows com hardware permanece pendente.

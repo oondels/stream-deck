@@ -14,9 +14,10 @@ adaptadores de hardware e configuração do PlatformIO.
 - Perfil alternativo: ESP32-C3 compacta com USB CDC nativa.
 - Controles: sete botões e encoder com giro horário, anti-horário e clique.
 - Transporte: JSON Lines pela serial a 115200 baud.
-- Host: monitor Python para Windows, com console, JSONL e fila de ações.
-- Ações: mídia/volume, hotkeys, aplicativos e URLs configurados por JSON.
-- Fora da etapa atual: HID, GUI, perfis, autostart, Wi-Fi, Bluetooth e LEDs.
+- Host: aplicativo Python com interface gráfica, bandeja, perfis e log JSONL.
+- Ações: mídia/volume, hotkeys, aplicativos e URLs configurados visualmente.
+- CLI: monitor de terminal preservado para desenvolvimento e diagnóstico.
+- Fora da etapa atual: HID, macros, instalador, Wi-Fi, Bluetooth e LEDs.
 
 ## Documentação
 
@@ -25,6 +26,7 @@ adaptadores de hardware e configuração do PlatformIO.
 - [Hardware](docs/HARDWARE.md)
 - [Protocolo serial](docs/PROTOCOL.md)
 - [Desenvolvimento e operação](docs/DEVELOPMENT.md)
+- [Interface gráfica Windows](docs/GUI.md)
 - [Estratégia de testes](docs/TESTING.md)
 - [Portabilidade para Pico](docs/PORTABILITY.md)
 - [Decisão de plataforma e transporte](docs/adr/0001-esp32-serial-first.md)
@@ -35,10 +37,9 @@ adaptadores de hardware e configuração do PlatformIO.
    perfil em `docs/HARDWARE.md`.
 2. Instale o PlatformIO e compile/grave com `pio run -e <perfil>` conforme
    `docs/DEVELOPMENT.md`.
-3. Crie o ambiente virtual Python e instale as dependências.
-4. Execute `python -m streamdeck_monitor` a partir da raiz conforme o guia de
-   desenvolvimento.
-5. Pressione os botões e gire o encoder; confira eventos e ações no log.
+3. Crie o ambiente virtual Python e instale as dependências da interface.
+4. Execute `streamdeck-gui` conforme o guia da interface gráfica.
+5. Configure os controles visualmente; pressione os botões e gire o encoder.
 
 O arquivo `projeto_exemplo.c` é somente uma referência histórica e não participa
 da compilação.

@@ -85,7 +85,19 @@ Somente um processo pode consumir a porta serial sem corromper ou perder dados.
 
 ## Aplicativo Windows
 
-No PowerShell, a partir da raiz:
+A interface gráfica é o host recomendado. Consulte o [guia completo da
+GUI](GUI.md). No PowerShell, a partir da raiz:
+
+```powershell
+py -3.12 -m venv host_app\.venv
+host_app\.venv\Scripts\Activate.ps1
+python -m pip install -e "host_app[gui]"
+streamdeck-gui
+```
+
+O monitor CLI abaixo permanece disponível para diagnóstico e automação.
+
+No PowerShell:
 
 ```powershell
 py -m venv .venv

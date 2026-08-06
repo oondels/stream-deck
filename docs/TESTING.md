@@ -33,6 +33,8 @@ Arduino ficam restritos à integração no alvo.
 - Resolve eventos e mantém ações em fila FIFO sem bloquear a serial.
 - Simula `SendInput`, abertura de processos e URLs sem depender de Windows.
 - Suprime ações para sequências duplicadas ou regressivas.
+- Valida migração, persistência atômica, perfis e importação/exportação.
+- Testa widgets Qt em modo offscreen, troca de perfil e fluxo de eventos.
 
 ## Validação manual
 
@@ -69,3 +71,4 @@ Arduino ficam restritos à integração no alvo.
 - Dry-run físico no Linux aprovado.
 - Validação real das APIs de ação no Windows documentada; se não houver Windows
   disponível, marcar explicitamente como pendente.
+- Checklist manual da GUI em `docs/GUI.md` aprovado no Windows antes da release.

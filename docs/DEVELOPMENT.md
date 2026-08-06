@@ -12,25 +12,76 @@ docs/                     contratos e decisões
 projeto_exemplo.c         referência, fora do build
 ```
 
-## Firmware
+## Firmware e perfis de placa
 
 Pré-requisito: PlatformIO Core 6 ou extensão PlatformIO IDE.
 
+Ambientes disponíveis:
+
+| Ambiente | Placa | Comunicação USB | Identificação no `hello` |
+|---|---|---|---|
+| `esp32dev` | ESP32-WROOM-32U/ESP32 Dev Module | ponte USB-UART | `esp32` |
+| `esp32c3` | ESP32-C3 compacta | USB CDC/JTAG nativa | `esp32-c3` |
+| `native` | computador de desenvolvimento | não se aplica | testes somente |
+
+`esp32dev` é o ambiente padrão. Por isso, comandos sem `-e` continuam
+compilando e gravando o ESP32-WROOM-32U.
+
+### Descobrir a porta
+
+Conecte somente a placa que será gravada e execute:
+
 ```bash
-pio run
-pio run -t upload
-pio device monitor -b 115200
+pio device list
+```
+
+No Linux, a porta normalmente será `/dev/ttyUSB0` ou `/dev/ttyACM0`. No Windows,
+será algo como `COM4`.
+
+### ESP32-WROOM-32U
+
+```bash
+pio run -e esp32dev
+pio run -e esp32dev -t upload --upload-port /dev/ttyUSB0
+pio device monitor -e esp32dev -p /dev/ttyUSB0
+```
+
+No Windows, substitua `/dev/ttyUSB0` por `COM4`.
+
+### ESP32-C3 compacta
+
+Este perfil atende à placa que expõe GPIO0–10, GPIO20 e GPIO21. A comunicação e
+a gravação usam USB CDC/JTAG nativa nos GPIO18/19 internos; o encoder usa
+GPIO20/21.
+
+```bash
+pio run -e esp32c3
+pio run -e esp32c3 -t upload --upload-port /dev/ttyACM0
+pio device monitor -e esp32c3 -p /dev/ttyACM0
+```
+
+Essa placa normalmente aparece como `/dev/ttyACM0` no Linux. Use a porta exibida
+por `pio device list`; no Windows, ela aparecerá como uma porta `COM`.
+
+No primeiro upload, se a placa não entrar automaticamente no bootloader:
+
+1. mantenha `BOOT` pressionado;
+2. pressione e solte `RESET`;
+3. solte `BOOT`;
+4. repita o comando de upload com a nova porta detectada.
+
+### Compilar todos e executar testes
+
+```bash
+pio run -e esp32dev -e esp32c3
 pio test -e native
 ```
 
-Na primeira gravação, selecione explicitamente a porta se necessário:
+Ao trocar de placa, sempre informe o ambiente correto com `-e`. O perfil escolhe
+a pinagem em tempo de compilação; não é necessário alterar o código-fonte.
 
-```bash
-pio run -t upload --upload-port COM4
-```
-
-Não mantenha o monitor serial aberto ao executar o aplicativo Python; somente um
-processo pode possuir a porta COM.
+Antes de iniciar o aplicativo Python, encerre `pio device monitor` com `Ctrl+C`.
+Somente um processo pode consumir a porta serial sem corromper ou perder dados.
 
 ## Aplicativo Windows
 
@@ -49,6 +100,9 @@ Para fixar uma porta:
 python -m streamdeck_monitor --config host_app\config.example.json --port COM4
 ```
 
+O host identifica automaticamente os dois perfis pelo handshake; não existe uma
+configuração Python diferente para cada placa.
+
 O exemplo configura mídia nas teclas 1 a 4, `Win+D`, Calculadora, YouTube e
 volume/mudo no encoder. Edite `actions.bindings` para alterar o mapa.
 
@@ -60,6 +114,9 @@ host_app/.venv/bin/python -m streamdeck_monitor \
   --port /dev/ttyUSB0 \
   --dry-run-actions
 ```
+
+Se a placa aparecer como `/dev/ttyACM0`, use esse caminho no lugar de
+`/dev/ttyUSB0`.
 
 Com bindings configurados, executar fora do Windows sem `--dry-run-actions`
 termina com erro de configuração operacional.

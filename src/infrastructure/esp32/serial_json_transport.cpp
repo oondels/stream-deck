@@ -54,7 +54,7 @@ void SerialJsonTransport::publish_hello() {
   document["v"] = 1;
   document["type"] = "hello";
   document["device"] = "stream-deck-mini";
-  document["board"] = "esp32";
+  document["board"] = config::kBoardName;
   document["firmware"] = "0.1.0";
   serializeJson(document, Serial);
   Serial.write('\n');

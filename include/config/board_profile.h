@@ -1,18 +1,25 @@
 #pragma once
 
-#include <array>
 #include <cstdint>
+
+#if defined(STREAMDECK_BOARD_ESP32_C3)
+#include "config/profiles/esp32_c3_compact.h"
+#else
+#include "config/profiles/esp32_wroom_32u.h"
+#endif
 
 namespace streamdeck::config {
 
-inline constexpr std::array<std::uint8_t, 8> kButtonPins{
-    13, 14, 16, 17, 18, 19, 21, 25,
-};
-inline constexpr std::uint8_t kEncoderAPin = 22;
-inline constexpr std::uint8_t kEncoderBPin = 23;
-inline constexpr std::uint8_t kFutureLedPin = 26;
+inline constexpr auto kBoardName = profile::kBoardName;
+inline constexpr auto kButtonPins = profile::kButtonPins;
+inline constexpr auto kEncoderAPin = profile::kEncoderAPin;
+inline constexpr auto kEncoderBPin = profile::kEncoderBPin;
+inline constexpr auto kFutureLedPin = profile::kFutureLedPin;
 inline constexpr std::uint32_t kBaudRate = 115200;
 inline constexpr std::uint32_t kDebounceMs = 30;
 inline constexpr std::size_t kPhysicalButtonCount = kButtonPins.size();
+
+static_assert(kPhysicalButtonCount == 8,
+              "profile must define seven keys and encoder press");
 
 }  // namespace streamdeck::config

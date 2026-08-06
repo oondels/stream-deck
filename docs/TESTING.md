@@ -64,7 +64,7 @@ Arduino ficam restritos à integração no alvo.
 ## Gate de conclusão
 
 - Documentação internamente consistente.
-- `pio run` e `pio test -e native` aprovados.
+- `pio run -e esp32dev`, `pio run -e esp32c3` e `pio test -e native` aprovados.
 - `pytest` aprovado.
 - Dry-run físico no Linux aprovado.
 - Validação real das APIs de ação no Windows documentada; se não houver Windows

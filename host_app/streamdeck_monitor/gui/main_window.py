@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from dataclasses import replace
 import json
+from pathlib import Path
 from uuid import uuid4
 
 from PySide6.QtCore import Qt, Signal
@@ -9,6 +10,8 @@ from PySide6.QtGui import QAction
 from PySide6.QtWidgets import (
     QAbstractItemView,
     QComboBox,
+    QDialog,
+    QFileDialog,
     QFrame,
     QHBoxLayout,
     QInputDialog,
@@ -33,8 +36,10 @@ from streamdeck_monitor.domain.profiles import Profile
 from streamdeck_monitor.gui.action_editor import ActionEditor
 from streamdeck_monitor.gui.deck_widget import DeckWidget
 from streamdeck_monitor.gui.runtime_bridge import RuntimeBridge
+from streamdeck_monitor.gui.settings_dialog import SettingsDialog
 from streamdeck_monitor.infrastructure.config_repository import ConfigurationRepository
 from streamdeck_monitor.infrastructure.event_sink import LogEntry
+from streamdeck_monitor.infrastructure.windows_startup import set_start_with_windows
 
 
 class MainWindow(QMainWindow):
@@ -89,9 +94,27 @@ class MainWindow(QMainWindow):
         root.addWidget(self.tabs)
         self.setCentralWidget(central)
 
-        exit_action = QAction("Sair", self)
-        exit_action.triggered.connect(self.request_exit)
         file_menu = self.menuBar().addMenu("Arquivo")
+        settings_action = QAction("Configurações…", self)
+        import_profile_action = QAction("Importar perfil…", self)
+        export_profile_action = QAction("Exportar perfil…", self)
+        import_backup_action = QAction("Restaurar backup completo…", self)
+        export_backup_action = QAction("Exportar backup completo…", self)
+        exit_action = QAction("Sair", self)
+        settings_action.triggered.connect(self._open_settings)
+        import_profile_action.triggered.connect(self._import_profile)
+        export_profile_action.triggered.connect(self._export_profile)
+        import_backup_action.triggered.connect(self._import_backup)
+        export_backup_action.triggered.connect(self._export_backup)
+        exit_action.triggered.connect(self.request_exit)
+        file_menu.addAction(settings_action)
+        file_menu.addSeparator()
+        file_menu.addAction(import_profile_action)
+        file_menu.addAction(export_profile_action)
+        file_menu.addSeparator()
+        file_menu.addAction(import_backup_action)
+        file_menu.addAction(export_backup_action)
+        file_menu.addSeparator()
         file_menu.addAction(exit_action)
 
     def _build_configuration_tab(self) -> QWidget:
@@ -338,6 +361,95 @@ class MainWindow(QMainWindow):
             QMessageBox.warning(
                 self, "Teste indisponível", "A ação não está disponível no runtime."
             )
+
+    def _open_settings(self) -> None:
+        previous = self.configuration
+        dialog = SettingsDialog(previous, self)
+        if dialog.exec() != QDialog.DialogCode.Accepted:
+            return
+        configuration = dialog.result_configuration()
+        try:
+            self.repository.save(configuration)
+            if previous.ui.start_with_windows != configuration.ui.start_with_windows:
+                set_start_with_windows(configuration.ui.start_with_windows)
+        except Exception as error:
+            QMessageBox.critical(self, "Erro ao salvar", str(error))
+            return
+        if not self.runtime.restart(configuration):
+            QMessageBox.critical(
+                self,
+                "Erro ao reiniciar",
+                "O monitor serial não encerrou no tempo esperado.",
+            )
+            return
+        self.configuration = configuration
+        self.statusBar().showMessage("Configurações salvas", 3000)
+
+    def _import_profile(self) -> None:
+        source, _ = QFileDialog.getOpenFileName(
+            self, "Importar perfil", "", "Arquivos JSON (*.json)"
+        )
+        if not source:
+            return
+        try:
+            configuration = self.repository.import_profile(
+                Path(source), self.configuration
+            )
+            self.repository.save(configuration)
+        except Exception as error:
+            QMessageBox.critical(self, "Erro ao importar", str(error))
+            return
+        self.configuration = configuration
+        self.runtime.apply_profile(configuration)
+        self._load_profiles()
+
+    def _export_profile(self) -> None:
+        target, _ = QFileDialog.getSaveFileName(
+            self,
+            "Exportar perfil",
+            f"{self.configuration.active_profile.name}.json",
+            "Arquivos JSON (*.json)",
+        )
+        if not target:
+            return
+        try:
+            self.repository.export_profile(
+                self.configuration.active_profile, Path(target)
+            )
+        except Exception as error:
+            QMessageBox.critical(self, "Erro ao exportar", str(error))
+
+    def _import_backup(self) -> None:
+        source, _ = QFileDialog.getOpenFileName(
+            self, "Restaurar backup completo", "", "Arquivos JSON (*.json)"
+        )
+        if not source:
+            return
+        try:
+            configuration = self.repository.import_backup(Path(source))
+            self.repository.save(configuration)
+        except Exception as error:
+            QMessageBox.critical(self, "Erro ao restaurar", str(error))
+            return
+        if not self.runtime.restart(configuration):
+            QMessageBox.critical(self, "Erro", "Não foi possível reiniciar o monitor.")
+            return
+        self.configuration = configuration
+        self._load_profiles()
+
+    def _export_backup(self) -> None:
+        target, _ = QFileDialog.getSaveFileName(
+            self,
+            "Exportar backup completo",
+            "stream-deck-mini-backup.json",
+            "Arquivos JSON (*.json)",
+        )
+        if not target:
+            return
+        try:
+            self.repository.export_backup(self.configuration, Path(target))
+        except Exception as error:
+            QMessageBox.critical(self, "Erro ao exportar", str(error))
 
     def _connection_changed(self, state: str, details: object) -> None:
         values = details if isinstance(details, dict) else {}

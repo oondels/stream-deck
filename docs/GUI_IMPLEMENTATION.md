@@ -36,12 +36,12 @@ como concluída depois que seus testes associados passarem.
   - [x] editores de press/release e encoder
   - [x] formulários de mídia, hotkey, aplicativo e URL
   - [x] gestão manual de perfis
-- [ ] 5. Operação Windows
-  - [ ] status do dispositivo e eventos recentes
-  - [ ] configurações básicas e avançadas
-  - [ ] bandeja e pausa/troca de perfil
-  - [ ] instância única
-  - [ ] autostart opcional por HKCU
+- [x] 5. Operação Windows
+  - [x] status do dispositivo e eventos recentes
+  - [x] configurações básicas e avançadas
+  - [x] bandeja e pausa/troca de perfil
+  - [x] instância única
+  - [x] autostart opcional por HKCU
 - [ ] 6. Distribuição e aceite
   - [ ] assets e ícone do aplicativo
   - [ ] PyInstaller `onedir` sem console
@@ -68,5 +68,5 @@ como concluída depois que seus testes associados passarem.
 
 ## Última validação
 
-- 2026-08-06: etapas 1 a 4 concluídas; `68 passed` no host e `ruff check`
+- 2026-08-06: etapas 1 a 5 concluídas; `71 passed` no host e `ruff check`
   aprovado.

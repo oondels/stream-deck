@@ -13,6 +13,7 @@ from PySide6.QtWidgets import (
 
 from streamdeck_monitor.application.runtime_service import RuntimeService
 from streamdeck_monitor.gui.main_window import MainWindow
+from streamdeck_monitor.gui.single_instance import SingleInstance
 from streamdeck_monitor.gui.theme import DARK_STYLESHEET
 from streamdeck_monitor.infrastructure.config_repository import ConfigurationRepository
 from streamdeck_monitor.infrastructure.configuration import ConfigurationError
@@ -23,6 +24,9 @@ def run(minimized: bool = False) -> int:
     application.setApplicationName("Stream Deck Mini")
     application.setOrganizationName("StreamDeckMini")
     application.setStyleSheet(DARK_STYLESHEET)
+    instance = SingleInstance()
+    if not instance.acquire():
+        return 0
 
     repository = ConfigurationRepository()
     try:
@@ -53,6 +57,9 @@ def run(minimized: bool = False) -> int:
         application.quit()
 
     window.exit_requested.connect(shutdown)
+    instance.activation_requested.connect(
+        lambda: (window.showNormal(), window.raise_(), window.activateWindow())
+    )
     application.aboutToQuit.connect(window.shutdown)
     runtime.start()
 

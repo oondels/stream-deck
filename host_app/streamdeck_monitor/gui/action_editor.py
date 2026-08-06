@@ -109,6 +109,7 @@ class ActionEditor(QFrame):
         form.addRow("Executável", self.executable_edit)
         form.addRow("Argumentos", self.arguments_edit)
         form.addRow("URL", self.url_edit)
+        self._form = form
         root.addLayout(form)
 
         self.error_label = QLabel()
@@ -197,11 +198,17 @@ class ActionEditor(QFrame):
 
     def _update_action_fields(self) -> None:
         selected = self.action_combo.currentData()
-        self.media_combo.setVisible(selected == "media")
-        self.hotkey_edit.setVisible(selected == "hotkey")
-        self.executable_edit.setVisible(selected == "launch")
-        self.arguments_edit.setVisible(selected == "launch")
-        self.url_edit.setVisible(selected == "open_url")
+        self._set_field_visible(self.media_combo, selected == "media")
+        self._set_field_visible(self.hotkey_edit, selected == "hotkey")
+        self._set_field_visible(self.executable_edit, selected == "launch")
+        self._set_field_visible(self.arguments_edit, selected == "launch")
+        self._set_field_visible(self.url_edit, selected == "open_url")
+
+    def _set_field_visible(self, field, visible: bool) -> None:
+        field.setVisible(visible)
+        label = self._form.labelForField(field)
+        if label is not None:
+            label.setVisible(visible)
 
     def _choose_color(self) -> None:
         color = QColorDialog.getColor(

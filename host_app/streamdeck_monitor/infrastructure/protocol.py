@@ -2,7 +2,11 @@ from __future__ import annotations
 
 import json
 
-from streamdeck_monitor.domain.messages import DeviceMessage, ProtocolError, decode_mapping
+from streamdeck_monitor.domain.messages import (
+    DeviceMessage,
+    ProtocolError,
+    decode_mapping,
+)
 
 
 class JsonProtocolCodec:

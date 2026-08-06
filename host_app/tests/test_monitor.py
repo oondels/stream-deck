@@ -3,6 +3,7 @@ from datetime import datetime, timezone
 
 from streamdeck_monitor.application.monitor import DeckMonitor
 from streamdeck_monitor.application.ports import ConnectionError
+from streamdeck_monitor.application.runtime_control import ActionGate, MonitorControl
 from streamdeck_monitor.application.settings import SerialSettings
 from streamdeck_monitor.infrastructure.protocol import JsonProtocolCodec
 from streamdeck_monitor.domain.actions import Binding, MediaAction
@@ -201,3 +202,101 @@ def test_sequence_gap_still_dispatches_received_event() -> None:
 
     assert dispatcher.bindings == [binding, binding]
     assert any(entry["event"] == "sequence_gap" for entry in sink.entries)
+
+
+def test_monitor_stops_cooperatively_before_discovery() -> None:
+    sink = FakeSink()
+    control = MonitorControl()
+    control.stop()
+    monitor = DeckMonitor(
+        settings=SerialSettings(),
+        provider=FakeProvider({}),
+        codec=JsonProtocolCodec(),
+        clock=FakeClock(),
+        sink=sink,
+        control=control,
+    )
+
+    monitor.run_forever()
+
+    assert [entry["event"] for entry in sink.entries] == [
+        "monitor_started",
+        "device_searching",
+        "monitor_stopped",
+    ]
+
+
+def test_updates_bindings_without_recreating_monitor() -> None:
+    sink = FakeSink()
+    dispatcher = FakeDispatcher()
+    original = Binding("play", "key_1", "press", MediaAction("play_pause"))
+    replacement = Binding("stop", "key_1", "press", MediaAction("stop"))
+    monitor = DeckMonitor(
+        settings=SerialSettings(),
+        provider=FakeProvider({}),
+        codec=JsonProtocolCodec(),
+        clock=FakeClock(),
+        sink=sink,
+        bindings=(original,),
+        dispatcher=dispatcher,
+    )
+
+    monitor.update_bindings((replacement,))
+    monitor.process_line(
+        '{"v":1,"type":"input","control":"key_1","event":"press","seq":1,"uptime_ms":100}',
+        "COM4",
+    )
+
+    assert dispatcher.bindings == [replacement]
+
+
+def test_pause_suppresses_device_action_but_keeps_input_log() -> None:
+    sink = FakeSink()
+    dispatcher = FakeDispatcher()
+    gate = ActionGate()
+    binding = Binding("play", "key_1", "press", MediaAction("play_pause"))
+    monitor = DeckMonitor(
+        settings=SerialSettings(),
+        provider=FakeProvider({}),
+        codec=JsonProtocolCodec(),
+        clock=FakeClock(),
+        sink=sink,
+        bindings=(binding,),
+        dispatcher=dispatcher,
+        action_gate=gate,
+    )
+
+    monitor.pause_actions()
+    monitor.process_line(
+        '{"v":1,"type":"input","control":"key_1","event":"press","seq":1,"uptime_ms":100}',
+        "COM4",
+    )
+
+    assert dispatcher.bindings == []
+    assert any(entry["event"] == "input" for entry in sink.entries)
+    suppressed = next(
+        entry for entry in sink.entries if entry["event"] == "action_suppressed"
+    )
+    assert suppressed["details"]["reason"] == "actions_paused"
+
+
+def test_manual_action_bypasses_pause_gate() -> None:
+    sink = FakeSink()
+    dispatcher = FakeDispatcher()
+    gate = ActionGate()
+    binding = Binding("play", "key_1", "press", MediaAction("play_pause"))
+    monitor = DeckMonitor(
+        settings=SerialSettings(),
+        provider=FakeProvider({}),
+        codec=JsonProtocolCodec(),
+        clock=FakeClock(),
+        sink=sink,
+        dispatcher=dispatcher,
+        action_gate=gate,
+    )
+    monitor.pause_actions()
+
+    monitor.test_action(binding)
+
+    assert dispatcher.bindings == [binding]
+    assert any(entry["event"] == "action_test_requested" for entry in sink.entries)

@@ -1,6 +1,7 @@
 from dataclasses import dataclass
 
 from streamdeck_monitor.domain.actions import Binding
+from streamdeck_monitor.domain.profiles import SCHEMA_VERSION, Profile
 
 
 @dataclass(frozen=True, slots=True)
@@ -23,6 +24,31 @@ class LoggingSettings:
 class ActionsSettings:
     bindings: tuple[Binding, ...] = ()
     queue_size: int = 64
+
+
+@dataclass(frozen=True, slots=True)
+class UiSettings:
+    start_with_windows: bool = False
+    close_to_tray: bool = True
+    theme: str = "dark"
+    recent_event_limit: int = 200
+
+
+@dataclass(frozen=True, slots=True)
+class GuiConfiguration:
+    active_profile_id: str
+    serial: SerialSettings
+    logging: LoggingSettings
+    queue_size: int
+    ui: UiSettings
+    profiles: tuple[Profile, ...]
+    schema_version: int = SCHEMA_VERSION
+
+    @property
+    def active_profile(self) -> Profile:
+        return next(
+            profile for profile in self.profiles if profile.id == self.active_profile_id
+        )
 
 
 @dataclass(frozen=True, slots=True)

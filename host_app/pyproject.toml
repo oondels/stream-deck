@@ -9,8 +9,15 @@ description = "Monitor serial do Stream Deck Mini"
 requires-python = ">=3.11"
 dependencies = ["pyserial==3.5"]
 
+[project.optional-dependencies]
+gui = ["PySide6>=6.8,<7"]
+build = ["PyInstaller>=6.10,<7"]
+gui-test = ["pytest-qt>=4.4,<5"]
+
 [project.scripts]
 streamdeck-monitor = "streamdeck_monitor.bootstrap:main"
+streamdeck-gui = "streamdeck_monitor.gui.bootstrap:main"
+
 
 [tool.setuptools.packages.find]
 where = ["."]

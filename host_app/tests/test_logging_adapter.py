@@ -8,9 +8,7 @@ from streamdeck_monitor.infrastructure.logging_adapter import CombinedLoggingSin
 def test_writes_jsonl_and_rotates(tmp_path) -> None:
     path = tmp_path / "events.jsonl"
     sink = CombinedLoggingSink(
-        LoggingSettings(
-            level="INFO", file=str(path), max_bytes=220, backup_count=2
-        )
+        LoggingSettings(level="INFO", file=str(path), max_bytes=220, backup_count=2)
     )
     timestamp = datetime(2026, 8, 4, tzinfo=timezone.utc)
 

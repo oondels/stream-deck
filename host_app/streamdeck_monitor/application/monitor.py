@@ -11,7 +11,8 @@ from streamdeck_monitor.application.ports import (
     RuntimeClock,
     SerialProvider,
 )
-from streamdeck_monitor.application.bindings import BindingResolver
+from streamdeck_monitor.application.bindings import BindingStore
+from streamdeck_monitor.application.runtime_control import ActionGate, MonitorControl
 from streamdeck_monitor.application.settings import SerialSettings
 from streamdeck_monitor.domain.actions import Binding
 from streamdeck_monitor.domain.messages import DeviceHello, ProtocolError
@@ -48,6 +49,9 @@ class DeckMonitor:
         sink: LogSink,
         bindings: tuple[Binding, ...] = (),
         dispatcher: ActionDispatcher | None = None,
+        binding_store: BindingStore | None = None,
+        control: MonitorControl | None = None,
+        action_gate: ActionGate | None = None,
     ) -> None:
         self._settings = settings
         self._provider = provider
@@ -55,19 +59,58 @@ class DeckMonitor:
         self._clock = clock
         self._sink = sink
         self._sequences = SequenceTracker()
-        self._bindings = BindingResolver(bindings)
+        self._bindings = binding_store or BindingStore(bindings)
         self._dispatcher = dispatcher
+        self._control = control or MonitorControl()
+        self._action_gate = action_gate or ActionGate()
+
+    @property
+    def stopped(self) -> bool:
+        return self._control.stopped
+
+    def stop(self) -> None:
+        self._control.stop()
+
+    def update_bindings(self, bindings: tuple[Binding, ...]) -> None:
+        self._bindings.update(bindings)
+
+    def pause_actions(self) -> None:
+        self._action_gate.pause()
+        self._log("INFO", "actions_paused")
+
+    def resume_actions(self) -> None:
+        self._action_gate.resume()
+        self._log("INFO", "actions_resumed")
+
+    def test_action(self, binding: Binding) -> None:
+        if self._dispatcher is None:
+            self._log(
+                "WARNING",
+                "action_test_unavailable",
+                binding_id=binding.id,
+                reason="dispatcher_unavailable",
+            )
+            return
+        self._log(
+            "INFO",
+            "action_test_requested",
+            binding_id=binding.id,
+            action_type=binding.action.type,
+        )
+        self._dispatcher.submit(binding)
 
     def close(self) -> None:
+        self.stop()
         if self._dispatcher is not None:
             self._dispatcher.close()
 
     def run_forever(self) -> None:
         self._log("INFO", "monitor_started", port=self._settings.port or "auto")
-        while True:
+        self._log("INFO", "device_searching", port=self._settings.port or "auto")
+        while not self._control.stopped:
             connection = self.discover_once()
             if connection is None:
-                self._clock.sleep(self._settings.scan_interval_seconds)
+                self._control.wait(self._settings.scan_interval_seconds)
                 continue
             try:
                 self.monitor_connection(connection)
@@ -81,6 +124,13 @@ class DeckMonitor:
             finally:
                 connection.close()
                 self._sequences.reset()
+                if not self._control.stopped:
+                    self._log(
+                        "INFO",
+                        "device_searching",
+                        port=self._settings.port or "auto",
+                    )
+        self._log("INFO", "monitor_stopped")
 
     def discover_once(self) -> LineConnection | None:
         ports = (
@@ -89,6 +139,8 @@ class DeckMonitor:
             else list(self._provider.available_ports())
         )
         for port in ports:
+            if self._control.stopped:
+                return None
             connection: LineConnection | None = None
             try:
                 connection = self._provider.open(port, self._settings.baud_rate)
@@ -112,7 +164,7 @@ class DeckMonitor:
     def _identify(self, connection: LineConnection) -> DeviceHello | None:
         deadline = self._clock.monotonic() + self._settings.handshake_timeout_seconds
         next_probe = 0.0
-        while self._clock.monotonic() < deadline:
+        while not self._control.stopped and self._clock.monotonic() < deadline:
             now = self._clock.monotonic()
             if now >= next_probe:
                 connection.write_line(self._codec.encode_probe())
@@ -129,7 +181,7 @@ class DeckMonitor:
         return None
 
     def monitor_connection(self, connection: LineConnection) -> None:
-        while True:
+        while not self._control.stopped:
             line = connection.read_line()
             if line is None:
                 continue
@@ -171,6 +223,17 @@ class DeckMonitor:
                 port=port,
                 control=message.control,
                 input_event=message.event,
+            )
+            return
+        if self._action_gate.paused:
+            self._log(
+                "INFO",
+                "action_suppressed",
+                port=port,
+                binding_id=binding.id,
+                control=message.control,
+                input_event=message.event,
+                reason="actions_paused",
             )
             return
         if suppress_action:

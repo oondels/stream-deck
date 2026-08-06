@@ -16,12 +16,14 @@ class _ConsoleFormatter(logging.Formatter):
         entry = record.streamdeck_entry
         details = " ".join(f"{key}={value}" for key, value in entry["details"].items())
         suffix = f" {details}" if details else ""
-        return f'{entry["timestamp"]} {entry["level"]:<7} {entry["event"]}{suffix}'
+        return f"{entry['timestamp']} {entry['level']:<7} {entry['event']}{suffix}"
 
 
 class _JsonFormatter(logging.Formatter):
     def format(self, record: logging.LogRecord) -> str:
-        return json.dumps(record.streamdeck_entry, ensure_ascii=False, separators=(",", ":"))
+        return json.dumps(
+            record.streamdeck_entry, ensure_ascii=False, separators=(",", ":")
+        )
 
 
 class CombinedLoggingSink:
@@ -48,7 +50,10 @@ class CombinedLoggingSink:
             file_handler.setFormatter(_JsonFormatter())
             self._logger.addHandler(file_handler)
         except OSError as error:
-            print(f"log file unavailable; console logging remains active: {error}", file=sys.stderr)
+            print(
+                f"log file unavailable; console logging remains active: {error}",
+                file=sys.stderr,
+            )
 
     def emit(
         self,

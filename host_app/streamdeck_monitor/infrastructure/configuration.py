@@ -75,6 +75,20 @@ def load_settings(path: str | Path) -> AppSettings:
         ) from error
     if not isinstance(raw, dict):
         raise ConfigurationError("configuration root must be an object")
+    if raw.get("schema_version") is not None:
+        from streamdeck_monitor.infrastructure.profile_configuration import (
+            decode_gui_configuration,
+        )
+
+        configuration = decode_gui_configuration(raw)
+        return AppSettings(
+            serial=configuration.serial,
+            logging=configuration.logging,
+            actions=ActionsSettings(
+                bindings=configuration.active_profile.bindings,
+                queue_size=configuration.queue_size,
+            ),
+        )
     unknown_root = set(raw) - {"serial", "logging", "actions"}
     if unknown_root:
         raise ConfigurationError(

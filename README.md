@@ -14,6 +14,7 @@ modo simulado. O monitor CLI continua disponível para diagnóstico.
 - Encoder com giro horário, giro anti-horário, pressionar e soltar.
 - Perfis criados e ativados manualmente.
 - Nome, ícone e cor configuráveis para cada controle.
+- Ordem visual das teclas ajustável para acompanhar a soldagem física.
 - Ações de mídia/volume, hotkeys, abertura de aplicativos e URLs.
 - Aplicação imediata das alterações, sem desconectar o dispositivo.
 - Descoberta automática, reconexão e escolha manual da porta serial.
@@ -283,6 +284,21 @@ administrador.
 
 Selecionar `Nenhuma` remove a ação daquele evento.
 
+### Reorganizar as teclas conforme a soldagem
+
+A ordem visual é global porque representa a ligação física do dispositivo; ela
+continua igual ao trocar de perfil.
+
+1. Clique em `Reordenar teclas` na área do dispositivo.
+2. Arraste uma tecla sobre outra para trocar suas posições.
+3. Repita até o desenho corresponder à posição real de cada botão.
+4. Clique em `Concluir organização`.
+
+A alteração é salva a cada troca. O encoder permanece fixo no canto superior
+direito. Aparência, bindings, seleção e destaque acompanham o controle físico:
+se `key_4` for movida para a primeira posição, uma entrada `key_4` destacará e
+editará essa posição.
+
 ### Configurar mídia e volume
 
 Escolha `Mídia / volume` e selecione uma operação:
@@ -494,6 +510,10 @@ Arquivos principais:
 
 Não edite o JSON enquanto a GUI estiver aberta. Prefira os formulários e os
 comandos de importação/exportação.
+
+O campo global `key_order` guarda a ordem visual de `key_1` a `key_7`.
+Configurações anteriores que não possuem o campo usam automaticamente a ordem
+padrão.
 
 ### CLI legado
 

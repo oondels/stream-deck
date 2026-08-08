@@ -148,11 +148,28 @@ class MainWindow(QMainWindow):
         deck_panel = QFrame()
         deck_panel.setObjectName("panel")
         deck_layout = QVBoxLayout(deck_panel)
+        deck_header = QHBoxLayout()
         deck_heading = QLabel("Dispositivo")
         deck_heading.setObjectName("sectionTitle")
-        deck_layout.addWidget(deck_heading)
-        self.deck = DeckWidget(self.configuration.active_profile)
+        self.reorder_button = QPushButton("Reordenar teclas")
+        self.reorder_button.setCheckable(True)
+        self.reorder_button.toggled.connect(self._toggle_reorder_mode)
+        deck_header.addWidget(deck_heading)
+        deck_header.addStretch()
+        deck_header.addWidget(self.reorder_button)
+        deck_layout.addLayout(deck_header)
+        self.reorder_help = QLabel(
+            "Arraste uma tecla sobre outra para trocar suas posições."
+        )
+        self.reorder_help.setObjectName("muted")
+        self.reorder_help.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.reorder_help.setVisible(False)
+        deck_layout.addWidget(self.reorder_help)
+        self.deck = DeckWidget(
+            self.configuration.active_profile, self.configuration.key_order
+        )
         self.deck.control_selected.connect(self._select_control)
+        self.deck.key_order_changed.connect(self._update_key_order)
         deck_layout.addWidget(self.deck)
 
         self.editor = ActionEditor()
@@ -222,7 +239,27 @@ class MainWindow(QMainWindow):
     def _show_active_profile(self) -> None:
         profile = self.configuration.active_profile
         self.deck.set_profile(profile)
+        self.deck.set_key_order(self.configuration.key_order)
         self.editor.set_control(profile, self.deck.selected_control)
+
+    def _toggle_reorder_mode(self, enabled: bool) -> None:
+        self.deck.set_reorder_enabled(enabled)
+        self.reorder_help.setVisible(enabled)
+        self.reorder_button.setText(
+            "Concluir organização" if enabled else "Reordenar teclas"
+        )
+
+    def _update_key_order(self, key_order: tuple[str, ...]) -> None:
+        previous_order = self.configuration.key_order
+        updated = replace(self.configuration, key_order=tuple(key_order))
+        try:
+            self.repository.save(updated)
+        except Exception as error:
+            self.deck.set_key_order(previous_order)
+            QMessageBox.critical(self, "Erro ao salvar", str(error))
+            return
+        self.configuration = updated
+        self.statusBar().showMessage("Ordem das teclas salva", 2500)
 
     def _activate_profile_row(self, row: int) -> None:
         if row < 0:

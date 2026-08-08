@@ -5,6 +5,7 @@ from uuid import uuid4
 import pytest
 
 from streamdeck_monitor.application.defaults import default_gui_configuration
+from streamdeck_monitor.domain.profiles import DEFAULT_KEY_ORDER
 from streamdeck_monitor.infrastructure.configuration import (
     ConfigurationError,
     load_settings,
@@ -24,6 +25,41 @@ def test_round_trips_versioned_configuration(tmp_path) -> None:
     assert decoded == original
     assert decoded.active_profile.name == "Padrão"
     assert len(decoded.active_profile.bindings) == 10
+
+
+def test_old_versioned_configuration_uses_default_key_order(tmp_path) -> None:
+    configuration = default_gui_configuration(tmp_path, str(uuid4()))
+    raw = encode_gui_configuration(configuration)
+    raw.pop("key_order")
+
+    decoded = decode_gui_configuration(raw)
+
+    assert decoded.key_order == DEFAULT_KEY_ORDER
+
+
+@pytest.mark.parametrize(
+    "key_order",
+    [
+        ["key_1"] * 7,
+        ["key_1", "key_2", "key_3", "key_4", "key_5", "key_6"],
+        [
+            "key_1",
+            "key_2",
+            "key_3",
+            "key_4",
+            "key_5",
+            "key_6",
+            "encoder",
+        ],
+        "key_1,key_2,key_3,key_4,key_5,key_6,key_7",
+    ],
+)
+def test_rejects_invalid_key_order(tmp_path, key_order) -> None:
+    raw = encode_gui_configuration(default_gui_configuration(tmp_path))
+    raw["key_order"] = key_order
+
+    with pytest.raises(ConfigurationError, match="key_order"):
+        decode_gui_configuration(raw)
 
 
 def test_cli_uses_active_profile_from_versioned_configuration(tmp_path) -> None:

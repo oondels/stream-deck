@@ -49,6 +49,13 @@ como concluída depois que seus testes associados passarem.
   - [x] build/testes existentes sem regressão
   - [x] documentação de uso e checklist manual Windows criado
   - [ ] checklist de aceite executado no Windows 10/11 com hardware
+- [x] 7. Ordem visual das teclas
+  - [x] ordem global compatível com configurações v2 existentes
+  - [x] validação, backup completo e persistência atômica
+  - [x] modo de reorganização por drag-and-drop
+  - [x] encoder fixo e bindings independentes da posição
+  - [x] rollback visual quando a gravação falha
+  - [x] testes Qt e documentação de uso
 
 ## Decisões fixadas
 
@@ -69,6 +76,8 @@ como concluída depois que seus testes associados passarem.
 
 ## Última validação
 
+- 2026-08-08: ordem visual global concluída; `81 passed`, `ruff check`,
+  PyInstaller, 6 testes nativos e builds `esp32dev`/`esp32c3` aprovados.
 - 2026-08-06: etapas 1 a 5 concluídas; etapa 6 automatizada aprovada com
   `71 passed`, `ruff check`, PyInstaller, 6 testes nativos e builds `esp32dev` e
   `esp32c3`. Aceite manual no Windows com hardware permanece pendente.

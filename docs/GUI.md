@@ -35,6 +35,11 @@ O backup automático da versão anterior fica em `config.json.bak`.
    imediatamente, sem reconectar o deck.
 6. Use `Testar ação` para executar a ação selecionada sem pressionar o hardware.
 
+Para ajustar a interface à ordem real da soldagem, clique em `Reordenar teclas`,
+arraste uma tecla sobre outra e finalize em `Concluir organização`. A disposição
+é global para o dispositivo, permanece igual em todos os perfis e é salva após
+cada troca. O encoder permanece fixo no canto superior direito.
+
 Teclas oferecem `Pressionar` e `Soltar`. O encoder oferece giro horário, giro
 anti-horário, pressionar e soltar. Uma ação pode controlar mídia/volume, enviar
 um atalho, abrir um aplicativo, abrir uma URL ou ficar desativada.
@@ -81,6 +86,7 @@ outra máquina; esta etapa não cria instalador.
 - [ ] Fechar envia para a bandeja e `Sair` encerra a porta serial.
 - [ ] Autostart cria/remove a entrada do usuário e inicia minimizado.
 - [ ] Importar/exportar perfil e backup preserva todas as configurações.
+- [ ] Reordenar teclas persiste globalmente e destaca a entrada física correta.
 
 ## Diagnóstico rápido
 

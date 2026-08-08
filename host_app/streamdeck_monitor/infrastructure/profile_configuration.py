@@ -20,6 +20,8 @@ from streamdeck_monitor.domain.actions import (
     OpenUrlAction,
 )
 from streamdeck_monitor.domain.profiles import (
+    DEFAULT_KEY_ORDER,
+    KEY_CONTROLS,
     PHYSICAL_CONTROLS,
     SCHEMA_VERSION,
     ControlAppearance,
@@ -59,6 +61,7 @@ def decode_gui_configuration(raw: object) -> GuiConfiguration:
         "logging",
         "actions",
         "ui",
+        "key_order",
         "profiles",
     }
     _reject_unknown(raw, allowed, "configuration")
@@ -79,6 +82,7 @@ def decode_gui_configuration(raw: object) -> GuiConfiguration:
     _validate(serial, logging)
     queue_size = _decode_queue_settings(raw.get("actions", {}))
     ui = _decode_ui(raw.get("ui", {}))
+    key_order = _decode_key_order(raw.get("key_order", list(DEFAULT_KEY_ORDER)))
 
     raw_profiles = raw.get("profiles")
     if not isinstance(raw_profiles, list) or not raw_profiles:
@@ -104,6 +108,7 @@ def decode_gui_configuration(raw: object) -> GuiConfiguration:
         queue_size=queue_size,
         ui=ui,
         profiles=profiles,
+        key_order=key_order,
     )
 
 
@@ -115,6 +120,7 @@ def encode_gui_configuration(configuration: GuiConfiguration) -> dict[str, objec
         "logging": asdict(configuration.logging),
         "actions": {"queue_size": configuration.queue_size},
         "ui": asdict(configuration.ui),
+        "key_order": list(configuration.key_order),
         "profiles": [encode_profile(profile) for profile in configuration.profiles],
     }
 
@@ -238,6 +244,17 @@ def _decode_queue_settings(raw: object) -> int:
     if type(value) is not int or value <= 0:
         raise ConfigurationError("actions.queue_size must be a positive integer")
     return value
+
+
+def _decode_key_order(raw: object) -> tuple[str, ...]:
+    if not isinstance(raw, list) or not all(isinstance(item, str) for item in raw):
+        raise ConfigurationError("key_order must be an array of key controls")
+    order = tuple(raw)
+    if len(order) != len(KEY_CONTROLS) or set(order) != set(KEY_CONTROLS):
+        raise ConfigurationError(
+            f"key_order must contain exactly {sorted(KEY_CONTROLS)}"
+        )
+    return order
 
 
 def _encode_serial(settings: SerialSettings) -> dict[str, object]:

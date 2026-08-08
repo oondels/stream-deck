@@ -5,7 +5,7 @@ from dataclasses import dataclass
 from streamdeck_monitor.domain.actions import Binding
 
 SCHEMA_VERSION = 2
-PHYSICAL_CONTROLS = (
+KEY_CONTROLS = (
     "key_1",
     "key_2",
     "key_3",
@@ -13,6 +13,10 @@ PHYSICAL_CONTROLS = (
     "key_5",
     "key_6",
     "key_7",
+)
+DEFAULT_KEY_ORDER = KEY_CONTROLS
+PHYSICAL_CONTROLS = (
+    *KEY_CONTROLS,
     "encoder",
 )
 

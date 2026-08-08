@@ -1,7 +1,11 @@
 from dataclasses import dataclass
 
 from streamdeck_monitor.domain.actions import Binding
-from streamdeck_monitor.domain.profiles import SCHEMA_VERSION, Profile
+from streamdeck_monitor.domain.profiles import (
+    DEFAULT_KEY_ORDER,
+    SCHEMA_VERSION,
+    Profile,
+)
 
 
 @dataclass(frozen=True, slots=True)
@@ -42,6 +46,7 @@ class GuiConfiguration:
     queue_size: int
     ui: UiSettings
     profiles: tuple[Profile, ...]
+    key_order: tuple[str, ...] = DEFAULT_KEY_ORDER
     schema_version: int = SCHEMA_VERSION
 
     @property

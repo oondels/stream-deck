@@ -1,9 +1,10 @@
 from pathlib import Path
 
 project = Path(SPECPATH)
-app_icon = str(
+app_icon_svg = str(
     project / "streamdeck_monitor" / "gui" / "assets" / "app_icon.svg"
 )
+app_icon_ico = str(project / "build" / "app_icon.ico")
 
 analysis = Analysis(
     [str(project / "streamdeck_monitor" / "gui" / "bootstrap.py")],
@@ -11,7 +12,7 @@ analysis = Analysis(
     binaries=[],
     datas=[
         (
-            app_icon,
+            app_icon_svg,
             "streamdeck_monitor/gui/assets",
         )
     ],
@@ -36,7 +37,7 @@ exe = EXE(
     upx=True,
     console=False,
     disable_windowed_traceback=False,
-    icon=app_icon,
+    icon=app_icon_ico,
 )
 
 collect = COLLECT(
